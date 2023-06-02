@@ -65,7 +65,7 @@ class MyDBHandler(
         onCreate(db)
     }
 
-    public fun isAccountAdded(): Boolean {
+    fun isAccountAdded(): Boolean {
         val db = this.readableDatabase
         val cursor = db.rawQuery("SELECT * FROM $TABLE_ACCOUNT", null)
         if (cursor.count <= 0) {
@@ -76,7 +76,37 @@ class MyDBHandler(
         return true
     }
 
-    public fun getLastSync(): Date? {
+
+    fun addAccount(username: String) {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put(COLUMN_USERNAME, username)
+        values.put(COLUMN_LIST_MODIFIED_SINCE_LAST_SYNC, 0)
+        db.insert(TABLE_ACCOUNT, null, values)
+        db.close()
+    }
+
+    fun getUsername(): String? {
+        val db = this.readableDatabase
+        val cursor = db.rawQuery("SELECT * FROM $TABLE_ACCOUNT", null)
+        cursor.moveToFirst()
+        val username = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_USERNAME))
+        cursor.close()
+        return username
+    }
+
+    fun updateLastSync() {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        val currentDate = Date()
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+        val dateString = dateFormat.format(currentDate)
+        values.put(COLUMN_LAST_SYNC, dateString)
+        db.update(TABLE_ACCOUNT, values, null, null)
+        db.close()
+    }
+
+    fun getLastSync(): Date? {
         val db = this.readableDatabase
         val cursor = db.rawQuery("SELECT * FROM $TABLE_ACCOUNT", null)
         cursor.moveToFirst()
@@ -91,33 +121,7 @@ class MyDBHandler(
         return date
     }
 
-    public fun addAccount(username: String) {
-        val db = this.writableDatabase
-        val values = ContentValues()
-        values.put(COLUMN_USERNAME, username)
-        values.put(COLUMN_LIST_MODIFIED_SINCE_LAST_SYNC, 0)
-        db.insert(TABLE_ACCOUNT, null, values)
-        db.close()
-    }
-
-    public fun deleteAllData() {
-        val db = this.writableDatabase
-        db.delete(TABLE_ACCOUNT, null, null)
-        db.close()
-    }
-
-    public fun updateLastSync() {
-        val db = this.writableDatabase
-        val values = ContentValues()
-        val currentDate = Date()
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-        val dateString = dateFormat.format(currentDate)
-        values.put(COLUMN_LAST_SYNC, dateString)
-        db.update(TABLE_ACCOUNT, values, null, null)
-        db.close()
-    }
-
-    public fun getModifiedSinceLastSync(): Boolean {
+    fun getModifiedSinceLastSync(): Boolean {
         val db = this.readableDatabase
         val cursor = db.rawQuery("SELECT * FROM $TABLE_ACCOUNT", null)
         cursor.moveToFirst()
@@ -127,12 +131,18 @@ class MyDBHandler(
         return modified != 0
     }
 
-    public fun setModifiedSinceLastSync(bool: Boolean) {
+    fun setModifiedSinceLastSync(bool: Boolean) {
         val db = this.writableDatabase
         val values = ContentValues()
         val value = if (bool) 1 else 0
         values.put(COLUMN_LIST_MODIFIED_SINCE_LAST_SYNC, value)
         db.update(TABLE_ACCOUNT, values, null, null)
+        db.close()
+    }
+
+    fun deleteAllData() {
+        val db = this.writableDatabase
+        db.delete(TABLE_ACCOUNT, null, null)
         db.close()
     }
 }
