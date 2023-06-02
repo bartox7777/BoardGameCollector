@@ -15,6 +15,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.w3c.dom.Text
+import org.xmlpull.v1.XmlPullParser
+import org.xmlpull.v1.XmlPullParserFactory
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -85,7 +87,7 @@ class Sync : AppCompatActivity() {
                         throw Exception("Dane na serwerze są przygotowywane. Spróbuj ponownie za kilka sekund.")
                     }
                     if (xmlFile.readText().contains("Invalid username specified")) {
-                        throw Exception("Użytkownik o podanej nazwie nie istnieje.")
+                        throw Exception("Taki użytkownik nie istnieje w bazie BGC.")
                     }
                     if (xmlFile.readText().contains("<error>")) {
                         throw Exception("Wystąpił nieznany błąd. Spróbuj ponownie później.")
@@ -120,6 +122,73 @@ class Sync : AppCompatActivity() {
 
         fun properSync() {
             downloadFile()
+            val xmlDirectory = File(filesDir, "xml")
+            val file = File(xmlDirectory, "collection.xml")
+            if (file.exists()) {
+                // parse XML file
+
+                val factory = XmlPullParserFactory.newInstance()
+                factory.isNamespaceAware = true
+                val parser = factory.newPullParser()
+
+                parser.setInput(file.inputStream(), null)
+
+                var eventType = parser.eventType
+                while (eventType != XmlPullParser.END_DOCUMENT) {
+                    when (eventType) {
+                        XmlPullParser.START_TAG -> {
+                            val tagName = parser.name
+                            when (tagName) {
+                                "item" -> {
+                                    val objectType = parser.getAttributeValue(null, "objecttype")
+                                    val objectId = parser.getAttributeValue(null, "objectid")
+                                    val subtype = parser.getAttributeValue(null, "subtype")
+                                    val collid = parser.getAttributeValue(null, "collid")
+                                }
+
+                                "name" -> {
+                                    val sortIndex = parser.getAttributeValue(null, "sortindex")
+                                    val name = parser.nextText()
+                                }
+
+                                "yearpublished" -> {
+                                    val yearPublished = parser.nextText()
+                                }
+
+                                "image" -> {
+                                    val image = parser.nextText()
+                                }
+
+                                "thumbnail" -> {
+                                    val thumbnail = parser.nextText()
+                                }
+
+                                "status" -> {
+                                    val own = parser.getAttributeValue(null, "own")
+                                    val prevOwned = parser.getAttributeValue(null, "prevowned")
+                                    val forTrade = parser.getAttributeValue(null, "fortrade")
+                                    val want = parser.getAttributeValue(null, "want")
+                                    val wantToPlay = parser.getAttributeValue(null, "wanttoplay")
+                                    val wantToBuy = parser.getAttributeValue(null, "wanttobuy")
+                                    val wishlist = parser.getAttributeValue(null, "wishlist")
+                                    val preordered = parser.getAttributeValue(null, "preordered")
+                                    val lastModified =
+                                        parser.getAttributeValue(null, "lastmodified")
+                                }
+
+                                "numplays" -> {
+                                    val numPlays = parser.nextText()
+                                }
+                            }
+                        }
+                    }
+
+
+
+                    eventType = parser.next()
+                }
+
+            }
         }
 
         val lastSync = dbHandler.getLastSync()

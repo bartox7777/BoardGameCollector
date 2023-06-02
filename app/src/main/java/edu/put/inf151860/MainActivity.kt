@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.i("MainActivity", "onCreate")
-        dbHandler.deleteAllData()
+        dbHandler.deleteAccountData()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -47,17 +47,35 @@ class MyDBHandler(
     companion object {
         private val DATABASE_VERSION = 1
         private val DATABASE_NAME = "bgc.db"
+
         val TABLE_ACCOUNT = "account"
+        val COLLECTION_TABLE = "collection"
+        val PHOTOS_TABLE = "photos"
+
         val COLUMN_ID = "_id"
+
         val COLUMN_USERNAME = "username"
         val COLUMN_LAST_SYNC = "lastsync"
         val COLUMN_LIST_MODIFIED_SINCE_LAST_SYNC = "list_modified_since_last_sync"
+
+        val COLUMN_TITLE = "title"
+        val COLUMN_YEAR = "year"
+        val COLUMN_THUMBNAIL_URL = "thumbnail_url"
+
+        val GAME_ID = "game_id"
+        val PHOTO = "photo"
     }
 
     override fun onCreate(db: SQLiteDatabase?) {
         val CREATE_ACCOUNT_TABLE =
             ("CREATE TABLE $TABLE_ACCOUNT($COLUMN_ID INTEGER PRIMARY KEY,$COLUMN_USERNAME TEXT,$COLUMN_LAST_SYNC DATETIME, $COLUMN_LIST_MODIFIED_SINCE_LAST_SYNC INTEGER)")
         db?.execSQL(CREATE_ACCOUNT_TABLE)
+
+        val CREATE_COLLECTION_TABLE = ("CREATE TABLE $COLLECTION_TABLE($COLUMN_ID INTEGER PRIMARY KEY,$COLUMN_TITLE TEXT,$COLUMN_YEAR INTEGER, $COLUMN_THUMBNAIL_URL TEXT)")
+        db?.execSQL(CREATE_COLLECTION_TABLE)
+
+        val CREATE_PHOTOS_TABLE = ("CREATE TABLE $PHOTOS_TABLE($COLUMN_ID INTEGER PRIMARY KEY,$GAME_ID INTEGER,$PHOTO TEXT)")
+        db?.execSQL(CREATE_PHOTOS_TABLE)
     }
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
@@ -140,9 +158,15 @@ class MyDBHandler(
         db.close()
     }
 
-    fun deleteAllData() {
+    fun deleteAccountData() {
         val db = this.writableDatabase
         db.delete(TABLE_ACCOUNT, null, null)
+        db.close()
+    }
+
+    fun deleteCollectionData() {
+        val db = this.writableDatabase
+        db.delete("collection", null, null)
         db.close()
     }
 }
