@@ -15,6 +15,11 @@
         android:theme="@style/Theme.BoardGameCollector"
         tools:targetApi="31">
         <activity
+            android:name=".Sync"
+            android:exported="false"
+            android:label="@string/title_activity_sync"
+            android:theme="@style/Theme.BoardGameCollector" />
+        <activity
             android:name=".Configure"
             android:exported="false" />
         <activity
