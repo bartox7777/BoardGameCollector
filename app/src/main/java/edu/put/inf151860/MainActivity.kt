@@ -10,7 +10,6 @@ import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import org.w3c.dom.Text
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -30,6 +29,19 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.eraseData).setOnClickListener {
             finishAffinity()
         }
+
+        findViewById<Button>(R.id.gameList).setOnClickListener {
+            val intent = Intent(this, GameListing::class.java)
+            intent.putExtra("expansion", false)
+            startActivity(intent)
+        }
+
+        findViewById<Button>(R.id.expansionsList).setOnClickListener {
+            val intent = Intent(this, GameListing::class.java)
+            intent.putExtra("expansion", true)
+            startActivity(intent)
+        }
+
 
     }
 
@@ -225,5 +237,22 @@ class MyDBHandler(
         val count = cursor.count
         cursor.close()
         return count
+    }
+
+    fun getGames(expansion : Boolean = false) : ArrayList<Game> {
+        val db = this.readableDatabase
+        val cursor = db.rawQuery("SELECT * FROM $COLLECTION_TABLE WHERE expansion=?", arrayOf(if (expansion) "1" else "0"), null)
+        val games = ArrayList<Game>()
+        if (!cursor.moveToFirst()) return games
+        do {
+            val id = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_GAMEID))
+            val title = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TITLE))
+            val year = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_YEAR))
+            val thumbnailUrl = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_THUMBNAIL_URL))
+            val game = Game(id, title, year, thumbnailUrl)
+            games.add(game)
+        } while (cursor.moveToNext())
+        cursor.close()
+        return games
     }
 }
