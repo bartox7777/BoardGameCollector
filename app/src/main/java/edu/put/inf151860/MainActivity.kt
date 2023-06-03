@@ -62,6 +62,7 @@ class MyDBHandler(
         val COLUMN_YEAR = "year"
         val COLUMN_THUMBNAIL_URL = "thumbnail_url"
         val COLUMN_GAMEID = "game_id"
+        val COLUMN_EXPANSION = "expansion"
 
         val GAME_ID = "game_id"
         val PHOTO = "photo"
@@ -72,7 +73,7 @@ class MyDBHandler(
             ("CREATE TABLE $TABLE_ACCOUNT($COLUMN_ID INTEGER PRIMARY KEY,$COLUMN_USERNAME TEXT,$COLUMN_LAST_SYNC DATETIME, $COLUMN_LIST_MODIFIED_SINCE_LAST_SYNC INTEGER)")
         db?.execSQL(CREATE_ACCOUNT_TABLE)
 
-        val CREATE_COLLECTION_TABLE = ("CREATE TABLE $COLLECTION_TABLE($COLUMN_ID INTEGER PRIMARY KEY,$COLUMN_TITLE TEXT,$COLUMN_YEAR INTEGER, $COLUMN_THUMBNAIL_URL TEXT, $COLUMN_GAMEID INTEGER UNIQUE)")
+        val CREATE_COLLECTION_TABLE = ("CREATE TABLE $COLLECTION_TABLE($COLUMN_ID INTEGER PRIMARY KEY,$COLUMN_TITLE TEXT,$COLUMN_YEAR INTEGER, $COLUMN_THUMBNAIL_URL TEXT, $COLUMN_GAMEID INTEGER UNIQUE, $COLUMN_EXPANSION INTEGER)")
         db?.execSQL(CREATE_COLLECTION_TABLE)
 
         val CREATE_PHOTOS_TABLE = ("CREATE TABLE $PHOTOS_TABLE($COLUMN_ID INTEGER PRIMARY KEY,$GAME_ID INTEGER,$PHOTO TEXT)")
@@ -178,7 +179,16 @@ class MyDBHandler(
         values.put(COLUMN_TITLE, title)
         values.put(COLUMN_YEAR, year)
         values.put(COLUMN_THUMBNAIL_URL, thumbnailUrl)
+        values.put(COLUMN_EXPANSION, 0)
         db.insert(COLLECTION_TABLE, null, values)
+        db.close()
+    }
+
+    fun makeExpansion(gameID : Long?){
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put(COLUMN_EXPANSION, 1)
+        db.update(COLLECTION_TABLE, values, "$COLUMN_GAMEID = ?", arrayOf(gameID.toString()))
         db.close()
     }
 }

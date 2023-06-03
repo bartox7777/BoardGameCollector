@@ -42,16 +42,28 @@ class Sync : AppCompatActivity() {
             sync()
         }
 
+        // listener for sync expansions button
+        findViewById<Button>(R.id.sync_expansions).setOnClickListener() {
+            findViewById<TextView>(R.id.progress_text).visibility = TextView.VISIBLE
+            findViewById<ProgressBar>(R.id.progress_bar).visibility = ProgressBar.VISIBLE
+            sync(1)
+        }
+
         findViewById<Button>(R.id.mainScreen_button).setOnClickListener {
             finish()
         }
     }
 
-    private fun sync() {
+    private fun sync(extension: Int = 0) {
         // download XML file asynchronously
         fun downloadFile() {
-            val urlString =
+            var urlString: String
+            if (extension == 0) urlString =
                 "https://boardgamegeek.com/xmlapi2/collection?username=${dbHandler.getUsername()}"
+            else {
+                urlString =
+                    "https://boardgamegeek.com/xmlapi2/collection?username=${dbHandler.getUsername()}&subtype=boardgameexpansion"
+            }
             Log.i("downloadFile", urlString)
             val xmlDirectory = File(filesDir, "xml")
             if (!xmlDirectory.exists()) {
@@ -104,7 +116,9 @@ class Sync : AppCompatActivity() {
                         val xmlDirectory = File(filesDir, "xml")
                         val file = File(xmlDirectory, "collection.xml")
                         if (file.exists()) {
-                            dbHandler.deleteCollectionData()
+                            if (extension == 0) {
+                                dbHandler.deleteCollectionData()
+                            }
                             // parse XML file
 
                             val factory = XmlPullParserFactory.newInstance()
@@ -117,8 +131,7 @@ class Sync : AppCompatActivity() {
                             var name: String? = null
                             var yearPublished: Int? = null
                             var thumbnail: String? = null
-                            var i : Int = 0
-
+                            var subtype: String? = null
 
                             var eventType = parser.eventType
                             while (eventType != XmlPullParser.END_DOCUMENT) {
@@ -131,20 +144,17 @@ class Sync : AppCompatActivity() {
                                                 objectID =
                                                     parser.getAttributeValue(null, "objectid")
                                                         .toLong()
-//                                    val subtype = parser.getAttributeValue(null, "subtype")
+                                                subtype = parser.getAttributeValue(null, "subtype")
 //                                    val collid = parser.getAttributeValue(null, "collid")
-                                                i+=1
                                             }
 
                                             "name" -> {
                                                 name = parser.nextText()
 //                                    val sortIndex = parser.getAttributeValue(null, "sortindex")
-                                                i+=1
                                             }
 
                                             "yearpublished" -> {
                                                 yearPublished = parser.nextText().toInt()
-                                                i+=1
                                             }
 
                                             "image" -> {
@@ -153,7 +163,6 @@ class Sync : AppCompatActivity() {
 
                                             "thumbnail" -> {
                                                 thumbnail = parser.nextText()
-                                                i+=1
                                             }
 
                                             "status" -> {
@@ -174,14 +183,27 @@ class Sync : AppCompatActivity() {
                                             }
                                         }
                                     }
-                                }
-                                if (i == 4) {
-                                    dbHandler.saveGame(objectID, name, yearPublished, thumbnail)
-                                    objectID = null
-                                    name = null
-                                    yearPublished = null
-                                    thumbnail = null
-                                    i=0
+
+                                    XmlPullParser.END_TAG -> {
+                                        val tagName = parser.name
+                                        when (tagName) {
+                                            "item" -> {
+                                                if (extension == 0 && objectID != null)
+                                                    dbHandler.saveGame(
+                                                        objectID,
+                                                        name,
+                                                        yearPublished,
+                                                        thumbnail
+                                                    )
+                                                else if (extension == 1 && objectID != null)
+                                                    dbHandler.makeExpansion(objectID)
+                                                objectID = null
+                                                name = null
+                                                yearPublished = null
+                                                thumbnail = null
+                                            }
+                                        }
+                                    }
                                 }
                                 eventType = parser.next()
 //                                Log.i("next", "")
@@ -213,21 +235,24 @@ class Sync : AppCompatActivity() {
 
         val lastSync = dbHandler.getLastSync()
         if (lastSync != null) {
-            if (dbHandler.getModifiedSinceLastSync()) {
+            if (dbHandler.getModifiedSinceLastSync() || extension == 1) {
                 // if different between current date and last sync is more than 1 day
                 if (ChronoUnit.DAYS.between(lastSync.toInstant(), Date().toInstant()) >= 1) {
                     properSync()
                 } else {
                     val builder = AlertDialog.Builder(this)
                     builder.setTitle("Potwierdzenie synchronizacji")
-                    builder.setMessage("Synchronizację wykonano mniej niż 24h temu. Czy na pewno chcesz ją wykonać?")
+                    if (extension == 0)
+                        builder.setMessage("Synchronizację wykonano mniej niż 24h temu. Czy na pewno chcesz ją wykonać?")
+                    else
+                        builder.setMessage("Upewnij się, że wcześniej wykonałeś standardową synchronizację.")
 
-                    builder.setPositiveButton("TAK") { dialog, _ ->
+                    builder.setPositiveButton("OK") { dialog, _ ->
                         properSync()
                         dialog.dismiss()
                     }
 
-                    builder.setNegativeButton("NIE") { dialog, _ ->
+                    builder.setNegativeButton("ANULUJ") { dialog, _ ->
                         Toast.makeText(this, "Anulowano synchronizację", Toast.LENGTH_SHORT).show()
                         findViewById<TextView>(R.id.progress_text).visibility = TextView.INVISIBLE
                         findViewById<ProgressBar>(R.id.progress_bar).visibility =

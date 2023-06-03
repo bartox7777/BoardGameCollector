@@ -81,4 +81,14 @@
         app:layout_constraintEnd_toEndOf="@+id/last_sync"
         app:layout_constraintTop_toBottomOf="@+id/last_sync" />
 
+    <Button
+        android:id="@+id/sync_expansions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="19dp"
+        android:text="Synchronizuj dodatki"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sync_button" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
