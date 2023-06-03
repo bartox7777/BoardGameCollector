@@ -52,6 +52,11 @@ class Sync : AppCompatActivity() {
         findViewById<Button>(R.id.mainScreen_button).setOnClickListener {
             finish()
         }
+
+        findViewById<Button>(R.id.eraseData2).setOnClickListener {
+            dbHandler.deleteAccountData()
+            finishAffinity()
+        }
     }
 
     private fun sync(extension: Int = 0) {
@@ -188,15 +193,12 @@ class Sync : AppCompatActivity() {
                                         val tagName = parser.name
                                         when (tagName) {
                                             "item" -> {
-                                                if (extension == 0 && objectID != null)
-                                                    dbHandler.saveGame(
-                                                        objectID,
-                                                        name,
-                                                        yearPublished,
-                                                        thumbnail
-                                                    )
-                                                else if (extension == 1 && objectID != null)
-                                                    dbHandler.makeExpansion(objectID)
+                                                if (extension == 0 && objectID != null) dbHandler.saveGame(
+                                                    objectID, name, yearPublished, thumbnail
+                                                )
+                                                else if (extension == 1 && objectID != null) dbHandler.makeExpansion(
+                                                    objectID
+                                                )
                                                 objectID = null
                                                 name = null
                                                 yearPublished = null
@@ -242,10 +244,8 @@ class Sync : AppCompatActivity() {
                 } else {
                     val builder = AlertDialog.Builder(this)
                     builder.setTitle("Potwierdzenie synchronizacji")
-                    if (extension == 0)
-                        builder.setMessage("Synchronizację wykonano mniej niż 24h temu. Czy na pewno chcesz ją wykonać?")
-                    else
-                        builder.setMessage("Upewnij się, że wcześniej wykonałeś standardową synchronizację.")
+                    if (extension == 0) builder.setMessage("Synchronizację wykonano mniej niż 24h temu. Czy na pewno chcesz ją wykonać?")
+                    else builder.setMessage("Upewnij się, że wcześniej wykonałeś standardową synchronizację.")
 
                     builder.setPositiveButton("OK") { dialog, _ ->
                         properSync()

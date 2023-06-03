@@ -7,7 +7,10 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.os.Bundle
 import android.util.Log
+import android.widget.Button
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import org.w3c.dom.Text
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -19,6 +22,14 @@ class MainActivity : AppCompatActivity() {
         dbHandler.deleteAccountData()
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        findViewById<Button>(R.id.syncView).setOnClickListener {
+            startActivity(Intent(this, Sync::class.java))
+        }
+
+        findViewById<Button>(R.id.eraseData).setOnClickListener {
+            finishAffinity()
+        }
 
     }
 
@@ -34,15 +45,18 @@ class MainActivity : AppCompatActivity() {
             // change activity to Sync
             Log.i("MainActivity", "getLastSync: null")
             startActivity(Intent(this, Sync::class.java))
+        } else{
+            findViewById<TextView>(R.id.username).text = dbHandler.getUsername()
+            findViewById<TextView>(R.id.numberOfGames).text = dbHandler.getNumberOfGames().toString()
+            findViewById<TextView>(R.id.numberOfExpansions).text =
+                dbHandler.getNumberOfExpansions().toString()
+            findViewById<TextView>(R.id.lastSync).text = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(dbHandler.getLastSync())
         }
     }
 }
 
 class MyDBHandler(
-    context: Context,
-    name: String?,
-    factory: SQLiteDatabase.CursorFactory?,
-    version: Int
+    context: Context, name: String?, factory: SQLiteDatabase.CursorFactory?, version: Int
 ) : SQLiteOpenHelper(context, DATABASE_NAME, factory, DATABASE_VERSION) {
     companion object {
         private val DATABASE_VERSION = 1
@@ -73,10 +87,12 @@ class MyDBHandler(
             ("CREATE TABLE $TABLE_ACCOUNT($COLUMN_ID INTEGER PRIMARY KEY,$COLUMN_USERNAME TEXT,$COLUMN_LAST_SYNC DATETIME, $COLUMN_LIST_MODIFIED_SINCE_LAST_SYNC INTEGER)")
         db?.execSQL(CREATE_ACCOUNT_TABLE)
 
-        val CREATE_COLLECTION_TABLE = ("CREATE TABLE $COLLECTION_TABLE($COLUMN_ID INTEGER PRIMARY KEY,$COLUMN_TITLE TEXT,$COLUMN_YEAR INTEGER, $COLUMN_THUMBNAIL_URL TEXT, $COLUMN_GAMEID INTEGER UNIQUE, $COLUMN_EXPANSION INTEGER)")
+        val CREATE_COLLECTION_TABLE =
+            ("CREATE TABLE $COLLECTION_TABLE($COLUMN_ID INTEGER PRIMARY KEY,$COLUMN_TITLE TEXT,$COLUMN_YEAR INTEGER, $COLUMN_THUMBNAIL_URL TEXT, $COLUMN_GAMEID INTEGER UNIQUE, $COLUMN_EXPANSION INTEGER)")
         db?.execSQL(CREATE_COLLECTION_TABLE)
 
-        val CREATE_PHOTOS_TABLE = ("CREATE TABLE $PHOTOS_TABLE($COLUMN_ID INTEGER PRIMARY KEY,$GAME_ID INTEGER,$PHOTO TEXT)")
+        val CREATE_PHOTOS_TABLE =
+            ("CREATE TABLE $PHOTOS_TABLE($COLUMN_ID INTEGER PRIMARY KEY,$GAME_ID INTEGER,$PHOTO TEXT)")
         db?.execSQL(CREATE_PHOTOS_TABLE)
     }
 
@@ -88,6 +104,7 @@ class MyDBHandler(
     fun isAccountAdded(): Boolean {
         val db = this.readableDatabase
         val cursor = db.rawQuery("SELECT * FROM $TABLE_ACCOUNT", null)
+        if (!cursor.moveToFirst()) return false
         if (cursor.count <= 0) {
             cursor.close()
             return false
@@ -109,7 +126,7 @@ class MyDBHandler(
     fun getUsername(): String? {
         val db = this.readableDatabase
         val cursor = db.rawQuery("SELECT * FROM $TABLE_ACCOUNT", null)
-        cursor.moveToFirst()
+        if (!cursor.moveToFirst()) return null
         val username = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_USERNAME))
         cursor.close()
         return username
@@ -129,7 +146,7 @@ class MyDBHandler(
     fun getLastSync(): Date? {
         val db = this.readableDatabase
         val cursor = db.rawQuery("SELECT * FROM $TABLE_ACCOUNT", null)
-        cursor.moveToFirst()
+        if (!cursor.moveToFirst()) return null
         val lastSync = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_LAST_SYNC))
         var date: Date? = null
         Log.i("MyDBHandler", "lastSync: $lastSync")
@@ -144,7 +161,7 @@ class MyDBHandler(
     fun getModifiedSinceLastSync(): Boolean {
         val db = this.readableDatabase
         val cursor = db.rawQuery("SELECT * FROM $TABLE_ACCOUNT", null)
-        cursor.moveToFirst()
+        if (!cursor.moveToFirst()) return false
         val modified =
             cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_LIST_MODIFIED_SINCE_LAST_SYNC))
         cursor.close()
@@ -172,7 +189,7 @@ class MyDBHandler(
         db.close()
     }
 
-    fun saveGame(id:Long?, title:String?, year:Int?, thumbnailUrl:String?){
+    fun saveGame(id: Long?, title: String?, year: Int?, thumbnailUrl: String?) {
         val db = this.writableDatabase
         val values = ContentValues()
         values.put(COLUMN_GAMEID, id)
@@ -184,11 +201,29 @@ class MyDBHandler(
         db.close()
     }
 
-    fun makeExpansion(gameID : Long?){
+    fun makeExpansion(gameID: Long?) {
         val db = this.writableDatabase
         val values = ContentValues()
         values.put(COLUMN_EXPANSION, 1)
         db.update(COLLECTION_TABLE, values, "$COLUMN_GAMEID = ?", arrayOf(gameID.toString()))
         db.close()
+    }
+
+    fun getNumberOfGames(): Int {
+        val db = this.readableDatabase
+        val cursor = db.rawQuery("SELECT * FROM $COLLECTION_TABLE WHERE expansion=0", null)
+        if (!cursor.moveToFirst()) return 0
+        val count = cursor.count
+        cursor.close()
+        return count
+    }
+
+    fun getNumberOfExpansions(): Int {
+        val db = this.readableDatabase
+        val cursor = db.rawQuery("SELECT * FROM $COLLECTION_TABLE WHERE expansion=1", null)
+        if (!cursor.moveToFirst()) return 0
+        val count = cursor.count
+        cursor.close()
+        return count
     }
 }
