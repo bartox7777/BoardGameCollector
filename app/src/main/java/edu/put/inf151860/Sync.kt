@@ -37,7 +37,6 @@ class Sync : AppCompatActivity() {
 
         // listener for sync button
         findViewById<Button>(R.id.sync_button).setOnClickListener {
-            // TODO: make progress bar visible
             findViewById<TextView>(R.id.progress_text).visibility = TextView.VISIBLE
             findViewById<ProgressBar>(R.id.progress_bar).visibility = ProgressBar.VISIBLE
             sync()
@@ -97,16 +96,103 @@ class Sync : AppCompatActivity() {
                         delay(5000)
                         dbHandler.updateLastSync()
                         updateLastSyncText()
-                        dbHandler.setModifiedSinceLastSync(false)
+//                        dbHandler.setModifiedSinceLastSync(false)
+                        dbHandler.setModifiedSinceLastSync(true)
                         Toast.makeText(this@Sync, "Synchronizacja zakończona", Toast.LENGTH_SHORT)
                             .show()
+
+                        val xmlDirectory = File(filesDir, "xml")
+                        val file = File(xmlDirectory, "collection.xml")
+                        if (file.exists()) {
+                            dbHandler.deleteCollectionData()
+                            // parse XML file
+
+                            val factory = XmlPullParserFactory.newInstance()
+                            factory.isNamespaceAware = true
+                            val parser = factory.newPullParser()
+//
+                            parser.setInput(file.inputStream(), null)
+//
+                            var objectID: Long? = null
+                            var name: String? = null
+                            var yearPublished: Int? = null
+                            var thumbnail: String? = null
+                            var i : Int = 0
+
+
+                            var eventType = parser.eventType
+                            while (eventType != XmlPullParser.END_DOCUMENT) {
+                                when (eventType) {
+                                    XmlPullParser.START_TAG -> {
+                                        val tagName = parser.name
+                                        when (tagName) {
+                                            "item" -> {
+//                                    val objectType = parser.getAttributeValue(null, "objecttype")
+                                                objectID =
+                                                    parser.getAttributeValue(null, "objectid")
+                                                        .toLong()
+//                                    val subtype = parser.getAttributeValue(null, "subtype")
+//                                    val collid = parser.getAttributeValue(null, "collid")
+                                                i+=1
+                                            }
+
+                                            "name" -> {
+                                                name = parser.nextText()
+//                                    val sortIndex = parser.getAttributeValue(null, "sortindex")
+                                                i+=1
+                                            }
+
+                                            "yearpublished" -> {
+                                                yearPublished = parser.nextText().toInt()
+                                                i+=1
+                                            }
+
+                                            "image" -> {
+//                                    val image = parser.nextText()
+                                            }
+
+                                            "thumbnail" -> {
+                                                thumbnail = parser.nextText()
+                                                i+=1
+                                            }
+
+                                            "status" -> {
+//                                    val own = parser.getAttributeValue(null, "own")
+//                                    val prevOwned = parser.getAttributeValue(null, "prevowned")
+//                                    val forTrade = parser.getAttributeValue(null, "fortrade")
+//                                    val want = parser.getAttributeValue(null, "want")
+//                                    val wantToPlay = parser.getAttributeValue(null, "wanttoplay")
+//                                    val wantToBuy = parser.getAttributeValue(null, "wanttobuy")
+//                                    val wishlist = parser.getAttributeValue(null, "wishlist")
+//                                    val preordered = parser.getAttributeValue(null, "preordered")
+//                                    val lastModified =
+//                                        parser.getAttributeValue(null, "lastmodified")
+                                            }
+
+                                            "numplays" -> {
+//                                    val numPlays = parser.nextText()
+                                            }
+                                        }
+                                    }
+                                }
+                                if (i == 4) {
+                                    dbHandler.saveGame(objectID, name, yearPublished, thumbnail)
+                                    objectID = null
+                                    name = null
+                                    yearPublished = null
+                                    thumbnail = null
+                                    i=0
+                                }
+                                eventType = parser.next()
+//                                Log.i("next", "")
+                            }
+
+                        }
                     }
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
                         Toast.makeText(
-                            this@Sync,
-                            "$e",
-                            Toast.LENGTH_SHORT
+                            this@Sync, "$e", Toast.LENGTH_SHORT
                         ).show()
                     }
                     findViewById<TextView>(R.id.progress_text).visibility = TextView.INVISIBLE
@@ -122,73 +208,7 @@ class Sync : AppCompatActivity() {
 
         fun properSync() {
             downloadFile()
-            val xmlDirectory = File(filesDir, "xml")
-            val file = File(xmlDirectory, "collection.xml")
-            if (file.exists()) {
-                // parse XML file
 
-                val factory = XmlPullParserFactory.newInstance()
-                factory.isNamespaceAware = true
-                val parser = factory.newPullParser()
-
-                parser.setInput(file.inputStream(), null)
-
-                var eventType = parser.eventType
-                while (eventType != XmlPullParser.END_DOCUMENT) {
-                    when (eventType) {
-                        XmlPullParser.START_TAG -> {
-                            val tagName = parser.name
-                            when (tagName) {
-                                "item" -> {
-                                    val objectType = parser.getAttributeValue(null, "objecttype")
-                                    val objectId = parser.getAttributeValue(null, "objectid")
-                                    val subtype = parser.getAttributeValue(null, "subtype")
-                                    val collid = parser.getAttributeValue(null, "collid")
-                                }
-
-                                "name" -> {
-                                    val sortIndex = parser.getAttributeValue(null, "sortindex")
-                                    val name = parser.nextText()
-                                }
-
-                                "yearpublished" -> {
-                                    val yearPublished = parser.nextText()
-                                }
-
-                                "image" -> {
-                                    val image = parser.nextText()
-                                }
-
-                                "thumbnail" -> {
-                                    val thumbnail = parser.nextText()
-                                }
-
-                                "status" -> {
-                                    val own = parser.getAttributeValue(null, "own")
-                                    val prevOwned = parser.getAttributeValue(null, "prevowned")
-                                    val forTrade = parser.getAttributeValue(null, "fortrade")
-                                    val want = parser.getAttributeValue(null, "want")
-                                    val wantToPlay = parser.getAttributeValue(null, "wanttoplay")
-                                    val wantToBuy = parser.getAttributeValue(null, "wanttobuy")
-                                    val wishlist = parser.getAttributeValue(null, "wishlist")
-                                    val preordered = parser.getAttributeValue(null, "preordered")
-                                    val lastModified =
-                                        parser.getAttributeValue(null, "lastmodified")
-                                }
-
-                                "numplays" -> {
-                                    val numPlays = parser.nextText()
-                                }
-                            }
-                        }
-                    }
-
-
-
-                    eventType = parser.next()
-                }
-
-            }
         }
 
         val lastSync = dbHandler.getLastSync()
@@ -220,8 +240,7 @@ class Sync : AppCompatActivity() {
                 }
             } else {
                 findViewById<TextView>(R.id.progress_text).visibility = TextView.INVISIBLE
-                findViewById<ProgressBar>(R.id.progress_bar).visibility =
-                    ProgressBar.INVISIBLE
+                findViewById<ProgressBar>(R.id.progress_bar).visibility = ProgressBar.INVISIBLE
                 Toast.makeText(this, "Brak zmian do synchronizacji", Toast.LENGTH_SHORT).show()
             }
         } else {

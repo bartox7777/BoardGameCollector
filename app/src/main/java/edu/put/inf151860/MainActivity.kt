@@ -61,6 +61,7 @@ class MyDBHandler(
         val COLUMN_TITLE = "title"
         val COLUMN_YEAR = "year"
         val COLUMN_THUMBNAIL_URL = "thumbnail_url"
+        val COLUMN_GAMEID = "game_id"
 
         val GAME_ID = "game_id"
         val PHOTO = "photo"
@@ -71,7 +72,7 @@ class MyDBHandler(
             ("CREATE TABLE $TABLE_ACCOUNT($COLUMN_ID INTEGER PRIMARY KEY,$COLUMN_USERNAME TEXT,$COLUMN_LAST_SYNC DATETIME, $COLUMN_LIST_MODIFIED_SINCE_LAST_SYNC INTEGER)")
         db?.execSQL(CREATE_ACCOUNT_TABLE)
 
-        val CREATE_COLLECTION_TABLE = ("CREATE TABLE $COLLECTION_TABLE($COLUMN_ID INTEGER PRIMARY KEY,$COLUMN_TITLE TEXT,$COLUMN_YEAR INTEGER, $COLUMN_THUMBNAIL_URL TEXT)")
+        val CREATE_COLLECTION_TABLE = ("CREATE TABLE $COLLECTION_TABLE($COLUMN_ID INTEGER PRIMARY KEY,$COLUMN_TITLE TEXT,$COLUMN_YEAR INTEGER, $COLUMN_THUMBNAIL_URL TEXT, $COLUMN_GAMEID INTEGER UNIQUE)")
         db?.execSQL(CREATE_COLLECTION_TABLE)
 
         val CREATE_PHOTOS_TABLE = ("CREATE TABLE $PHOTOS_TABLE($COLUMN_ID INTEGER PRIMARY KEY,$GAME_ID INTEGER,$PHOTO TEXT)")
@@ -167,6 +168,17 @@ class MyDBHandler(
     fun deleteCollectionData() {
         val db = this.writableDatabase
         db.delete("collection", null, null)
+        db.close()
+    }
+
+    fun saveGame(id:Long?, title:String?, year:Int?, thumbnailUrl:String?){
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put(COLUMN_GAMEID, id)
+        values.put(COLUMN_TITLE, title)
+        values.put(COLUMN_YEAR, year)
+        values.put(COLUMN_THUMBNAIL_URL, thumbnailUrl)
+        db.insert(COLLECTION_TABLE, null, values)
         db.close()
     }
 }
