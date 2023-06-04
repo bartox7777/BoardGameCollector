@@ -3,6 +3,7 @@ package edu.put.inf151860
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.os.Bundle
@@ -14,6 +15,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 class MainActivity : AppCompatActivity() {
+
     val dbHandler = MyDBHandler(this, null, null, 1)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -239,9 +241,13 @@ class MyDBHandler(
         return count
     }
 
-    fun getGames(expansion : Boolean = false) : ArrayList<Game> {
+    fun getGames(expansion : Boolean = false, orderByTitle : Boolean = true) : ArrayList<Game> {
         val db = this.readableDatabase
-        val cursor = db.rawQuery("SELECT * FROM $COLLECTION_TABLE WHERE expansion=?", arrayOf(if (expansion) "1" else "0"), null)
+//        var cursor : Cursor? = null
+        val cursor = if (orderByTitle)
+            db.rawQuery("SELECT * FROM $COLLECTION_TABLE WHERE expansion=? ORDER BY $COLUMN_TITLE", arrayOf(if (expansion) "1" else "0"), null)
+        else
+            db.rawQuery("SELECT * FROM $COLLECTION_TABLE WHERE expansion=? ORDER BY $COLUMN_YEAR", arrayOf(if (expansion) "1" else "0"), null)
         val games = ArrayList<Game>()
         if (!cursor.moveToFirst()) return games
         do {
