@@ -110,7 +110,7 @@ class Sync : AppCompatActivity() {
                     }
 
                     withContext(Dispatchers.Main) {
-                        delay(5000)
+                        delay(500)
                         dbHandler.updateLastSync()
                         updateLastSyncText()
                         dbHandler.setModifiedSinceLastSync(false)
@@ -266,7 +266,6 @@ class Sync : AppCompatActivity() {
             } else {
                 findViewById<TextView>(R.id.progress_text).visibility = TextView.INVISIBLE
                 findViewById<ProgressBar>(R.id.progress_bar).visibility = ProgressBar.INVISIBLE
-                Toast.makeText(this, "Brak zmian do synchronizacji", Toast.LENGTH_SHORT).show()
             }
         } else {
             properSync()
