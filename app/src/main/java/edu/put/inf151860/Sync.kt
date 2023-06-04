@@ -1,26 +1,22 @@
 package edu.put.inf151860
 
 import android.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.w3c.dom.Text
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileOutputStream
-import java.lang.Thread.sleep
 import java.net.URL
 import java.text.SimpleDateFormat
 import java.time.temporal.ChronoUnit
@@ -110,7 +106,7 @@ class Sync : AppCompatActivity() {
                     }
 
                     withContext(Dispatchers.Main) {
-                        delay(500)
+//                        delay(500)
                         dbHandler.updateLastSync()
                         updateLastSyncText()
 //                        dbHandler.setModifiedSinceLastSync(false)

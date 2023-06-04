@@ -3,7 +3,6 @@ package edu.put.inf151860
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
-import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.os.Bundle
@@ -260,5 +259,18 @@ class MyDBHandler(
         } while (cursor.moveToNext())
         cursor.close()
         return games
+    }
+
+    fun getGame(game_id : Long) : Game?{
+        val db = this.readableDatabase
+        val cursor = db.rawQuery("SELECT * FROM $COLLECTION_TABLE WHERE $COLUMN_GAMEID = ?", arrayOf(game_id.toString()), null)
+        if (!cursor.moveToFirst()) return null
+        val id = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_GAMEID))
+        val title = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TITLE))
+        val year = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_YEAR))
+        val thumbnailUrl = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_THUMBNAIL_URL))
+        val game = Game(id, title, year, thumbnailUrl)
+        cursor.close()
+        return game
     }
 }

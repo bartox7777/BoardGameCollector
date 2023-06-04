@@ -1,11 +1,8 @@
 package edu.put.inf151860
 
-import android.R.attr.bitmap
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.widget.Button
 import android.widget.ImageView
@@ -15,7 +12,12 @@ import android.widget.TableLayout
 import android.widget.TableRow
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import java.util.concurrent.Executors
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+val requestSemaphore = java.util.concurrent.Semaphore(5)
 
 
 class Game(id: Long, title: String?, year: Int?, thumbnailUrl: String?) {
@@ -25,7 +27,8 @@ class Game(id: Long, title: String?, year: Int?, thumbnailUrl: String?) {
     val thumbnailURL: String? = thumbnailUrl
 }
 
-class GameRow(context: Context, game: Game, idx: Int, on : Int?) : TableRow(context) {
+class GameRow(context: Context, game: Game, idx: Int, on: Int?) : TableRow(context) {
+    var thumbnail_bmp: android.graphics.Bitmap? = null
 
     init {
         addView(TextView(context).apply {
@@ -63,7 +66,7 @@ class GameRow(context: Context, game: Game, idx: Int, on : Int?) : TableRow(cont
             )
             width = 200
         })
-        if (game.ID == -1L){
+        if (game.ID == -1L) {
             addView(TextView(context).apply {
                 if (game.ID == -1L) {
                     text = "Miniaturka"
@@ -71,31 +74,62 @@ class GameRow(context: Context, game: Game, idx: Int, on : Int?) : TableRow(cont
                     text = game.thumbnailURL
                 }
                 layoutParams = LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f
                 )
                 width = 500
             })
-        } else{
-            val executor = Executors.newSingleThreadExecutor()
-            val handler = Handler(Looper.getMainLooper())
-            executor.execute {
+        } else {
+            // próba zmniejszenia narzutu przy pobieraniu wielu miniaturek
+
+//            val executor = Executors.newSingleThreadExecutor()
+//            val handler = Handler(Looper.getMainLooper())
+//            executor.execute {
+//                requestSemaphore.acquire()
+//                val url = game.thumbnailURL
+//                try {
+//                    val str = java.net.URL(url).openStream()
+//                    thumbnail_bmp = android.graphics.BitmapFactory.decodeStream(str)
+//                    val bmp =
+//                        android.graphics.Bitmap.createScaledBitmap(thumbnail_bmp!!, 300, 300, false)
+//                    requestSemaphore.release()
+//                    handler.post {
+//                        addView(ImageView(context).apply {
+//                            layoutParams = LayoutParams(
+//                                LinearLayout.LayoutParams.WRAP_CONTENT,
+//                                LinearLayout.LayoutParams.WRAP_CONTENT,
+//                                1f
+//                            )
+//                            setImageBitmap(bmp)
+//                        })
+//                    }
+//                } catch (e: Exception) {
+//                    Log.e("GameRow", "Error while loading image: $e")
+//                }
+//            }
+            CoroutineScope(Dispatchers.IO).launch(){
+                requestSemaphore.acquire()
                 val url = game.thumbnailURL
-                try{
+                try {
                     val str = java.net.URL(url).openStream()
-                    val bmp_ = android.graphics.BitmapFactory.decodeStream(str)
-                    val bmp = android.graphics.Bitmap.createScaledBitmap(bmp_, 300, 300, false)
-                    handler.post {
+                    thumbnail_bmp = android.graphics.BitmapFactory.decodeStream(str)
+                    val bmp =
+                        android.graphics.Bitmap.createScaledBitmap(thumbnail_bmp!!, 300, 300, false)
+                    requestSemaphore.release()
+                    withContext(Dispatchers.Main) {
                         addView(ImageView(context).apply {
                             layoutParams = LayoutParams(
-                                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                1f
                             )
                             setImageBitmap(bmp)
                         })
                     }
-                } catch (e: Exception){
+                } catch (e: Exception) {
                     Log.e("GameRow", "Error while loading image: $e")
                 }
-
             }
         }
 
@@ -110,6 +144,12 @@ class GameRow(context: Context, game: Game, idx: Int, on : Int?) : TableRow(cont
                 setBackgroundColor(if (idx % 2 == 0) 0xFFEEEEEE.toInt() else 0xFFCCCCCC.toInt())
             }
             setPadding(20, 40, 20, 40)
+            setOnClickListener() {
+                val intent = Intent(context, GameDetails::class.java)
+                intent.putExtra("game_id", game.ID)
+                intent.putExtra("thumbnail_bmp", thumbnail_bmp)
+                context.startActivity(intent)
+            }
         }
     }
 }
@@ -121,6 +161,9 @@ class GameListing : AppCompatActivity() {
     var gameList: ArrayList<Game> = ArrayList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        for (i in 1..5)
+            requestSemaphore.release()
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_listing)
 
@@ -146,7 +189,7 @@ class GameListing : AppCompatActivity() {
 
         findViewById<ScrollView>(R.id.scroll_view).addView(tableLayout)
 
-        findViewById<Button>(R.id.sort_by_title).setOnClickListener(){
+        findViewById<Button>(R.id.sort_by_title).setOnClickListener() {
             val intent = Intent(this, GameListing::class.java)
             intent.putExtra("expansion", expantion)
             intent.putExtra("sort_by_title", true)
@@ -154,7 +197,7 @@ class GameListing : AppCompatActivity() {
             startActivity(intent)
         }
 
-        findViewById<Button>(R.id.sort_by_year).setOnClickListener(){
+        findViewById<Button>(R.id.sort_by_year).setOnClickListener() {
             val intent = Intent(this, GameListing::class.java)
             intent.putExtra("expansion", expantion)
             intent.putExtra("sort_by_title", false)
@@ -162,7 +205,7 @@ class GameListing : AppCompatActivity() {
             startActivity(intent)
         }
 
-        findViewById<Button>(R.id.main_screen).setOnClickListener(){
+        findViewById<Button>(R.id.main_screen).setOnClickListener() {
             finish()
         }
     }
