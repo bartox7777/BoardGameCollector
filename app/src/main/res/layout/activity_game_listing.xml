@@ -14,18 +14,25 @@
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/button"
+            android:id="@+id/sort_by_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Button" />
+            android:text="Sortuj po tytule" />
 
         <Button
-            android:id="@+id/button2"
+            android:id="@+id/sort_by_year"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Button" />
+            android:text="Sortuj po roku" />
+
+        <Button
+            android:id="@+id/main_screen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Ekran główny" />
     </LinearLayout>
 
     <ScrollView

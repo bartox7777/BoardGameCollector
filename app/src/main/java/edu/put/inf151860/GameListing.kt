@@ -2,10 +2,12 @@ package edu.put.inf151860
 
 import android.R.attr.bitmap
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -115,6 +117,7 @@ class GameRow(context: Context, game: Game, idx: Int, on : Int?) : TableRow(cont
 class GameListing : AppCompatActivity() {
     lateinit var dbHandler: MyDBHandler
     var expantion: Boolean = false
+    var sort_by_title: Boolean = true
     var gameList: ArrayList<Game> = ArrayList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -123,12 +126,9 @@ class GameListing : AppCompatActivity() {
 
         dbHandler = MyDBHandler(this, null, null, 1)
         expantion = intent.getBooleanExtra("expansion", false)
+        sort_by_title = intent.getBooleanExtra("sort_by_title", true)
 
-        gameList = if (expantion) {
-            dbHandler.getGames(expansion = true)
-        } else {
-            dbHandler.getGames()
-        }
+        gameList = dbHandler.getGames(expansion = expantion, orderByTitle = sort_by_title)
 
         val tableLayout = TableLayout(this)
 
@@ -145,6 +145,26 @@ class GameListing : AppCompatActivity() {
         }
 
         findViewById<ScrollView>(R.id.scroll_view).addView(tableLayout)
+
+        findViewById<Button>(R.id.sort_by_title).setOnClickListener(){
+            val intent = Intent(this, GameListing::class.java)
+            intent.putExtra("expansion", expantion)
+            intent.putExtra("sort_by_title", true)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+            startActivity(intent)
+        }
+
+        findViewById<Button>(R.id.sort_by_year).setOnClickListener(){
+            val intent = Intent(this, GameListing::class.java)
+            intent.putExtra("expansion", expantion)
+            intent.putExtra("sort_by_title", false)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+            startActivity(intent)
+        }
+
+        findViewById<Button>(R.id.main_screen).setOnClickListener(){
+            finish()
+        }
     }
 
 }

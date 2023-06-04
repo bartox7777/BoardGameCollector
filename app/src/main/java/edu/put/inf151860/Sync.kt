@@ -115,8 +115,8 @@ class Sync : AppCompatActivity() {
                         updateLastSyncText()
                         dbHandler.setModifiedSinceLastSync(false)
 //                        dbHandler.setModifiedSinceLastSync(true)
-                        Toast.makeText(this@Sync, "Synchronizacja zakończona", Toast.LENGTH_SHORT)
-                            .show()
+//                        Toast.makeText(this@Sync, "Synchronizacja zakończona", Toast.LENGTH_SHORT)
+//                            .show()
 
                         val xmlDirectory = File(filesDir, "xml")
                         val file = File(xmlDirectory, "collection.xml")
@@ -264,6 +264,7 @@ class Sync : AppCompatActivity() {
                     alert.show()
                 }
             } else {
+                Toast.makeText(this, "Brak zmian do synchronizacji", Toast.LENGTH_SHORT).show()
                 findViewById<TextView>(R.id.progress_text).visibility = TextView.INVISIBLE
                 findViewById<ProgressBar>(R.id.progress_bar).visibility = ProgressBar.INVISIBLE
             }
