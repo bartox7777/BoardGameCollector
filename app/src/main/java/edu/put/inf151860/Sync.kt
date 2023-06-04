@@ -113,8 +113,8 @@ class Sync : AppCompatActivity() {
                         delay(500)
                         dbHandler.updateLastSync()
                         updateLastSyncText()
-                        dbHandler.setModifiedSinceLastSync(false)
-//                        dbHandler.setModifiedSinceLastSync(true)
+//                        dbHandler.setModifiedSinceLastSync(false)
+                        dbHandler.setModifiedSinceLastSync(true)
 //                        Toast.makeText(this@Sync, "Synchronizacja zakończona", Toast.LENGTH_SHORT)
 //                            .show()
 
