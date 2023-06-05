@@ -1,5 +1,6 @@
 package edu.put.inf151860
 
+import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -45,6 +46,24 @@ class GameDetails : AppCompatActivity() {
                     ), 500, 500, false
                 )
             )
+            setOnClickListener{
+                val builder = AlertDialog.Builder(this@GameDetails)
+                builder.setTitle("Potwierdzenie usunięcia")
+                builder.setMessage("Czy na pewno chcesz usunąć zdjecia.")
+
+                builder.setPositiveButton("OK") { dialog, _ ->
+                    f.delete()
+                    dialog.dismiss()
+                    recreate()
+                }
+
+                builder.setNegativeButton("ANULUJ") { dialog, _ ->
+                    dialog.dismiss()
+                }
+
+                val alert = builder.create()
+                alert.show()
+            }
         })
     }
 
