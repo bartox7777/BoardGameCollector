@@ -10,12 +10,14 @@ import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 
 class MainActivity : AppCompatActivity() {
 
     val dbHandler = MyDBHandler(this, null, null, 1)
+    val imagesDir = "images"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.i("MainActivity", "onCreate")
@@ -43,7 +45,15 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-
+        val imagesDir = File(applicationContext.filesDir, imagesDir)
+        if (!imagesDir.exists()) {
+            imagesDir.mkdir()
+        } else{
+            val images = imagesDir.listFiles()
+            for (image in images) {
+                image.delete()
+            }
+        }
     }
 
     override fun onResume() {

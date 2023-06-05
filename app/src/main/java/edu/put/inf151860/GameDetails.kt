@@ -51,7 +51,7 @@ class GameDetails : AppCompatActivity() {
 
     private fun initUri(gameID: Long): Uri {
         val imagesDir = File(applicationContext.filesDir, imagesDir)
-        imagesDir.mkdir()
+//        imagesDir.mkdir()
         image = File(imagesDir, "${gameID}_${gameID + Random.nextInt()}.jpg")
         Log.i("initUri", image!!.absolutePath)
 
@@ -72,7 +72,7 @@ class GameDetails : AppCompatActivity() {
         linearView = findViewById(R.id.linearView)
 
         val imDir = File(applicationContext.filesDir, imagesDir)
-        imDir.mkdir()
+//        imDir.mkdir()
         for (f in imDir.listFiles()) {
             if (f.name.startsWith(game_id.toString())) addImageToGallery(f)
         }
