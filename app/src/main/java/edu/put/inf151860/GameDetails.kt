@@ -1,12 +1,17 @@
 package edu.put.inf151860
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.FileProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -17,14 +22,31 @@ import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
+import kotlin.random.Random
 
 class GameDetails : AppCompatActivity() {
     var game: Game? = null
     var thumbnail_bmp: android.graphics.Bitmap? = null
     lateinit var dbHandler: MyDBHandler
-    var description : String? = null
+    lateinit var imageView: ImageView
+    var description: String? = null
+
+    val imagesDir = "images"
+
+    private fun initUri(gameID: Long): Uri {
+        val imagesDir = File(applicationContext.filesDir, imagesDir)
+        imagesDir.mkdir()
+        val image = File(imagesDir, "${gameID}_${gameID + Random.nextInt()}.jpg")
+
+        return FileProvider.getUriForFile(
+            applicationContext,
+            "com.example.fileprovider",
+            image
+        )
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+//        Log.i("GameDetails", applicationContext.packageName)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_details)
 
@@ -34,7 +56,7 @@ class GameDetails : AppCompatActivity() {
         thumbnail_bmp = intent.getParcelableExtra("thumbnail_bmp")
 
         findViewById<ImageView>(R.id.thumbnail).setImageBitmap(thumbnail_bmp)
-        findViewById<ImageView>(R.id.thumbnail).setOnClickListener(){
+        findViewById<ImageView>(R.id.thumbnail).setOnClickListener() {
             val intent = Intent(this, FullScreen::class.java)
             intent.putExtra("thumbnail_bmp", thumbnail_bmp)
             startActivity(intent)
@@ -43,10 +65,21 @@ class GameDetails : AppCompatActivity() {
         findViewById<TextView>(R.id.title).text = game?.name + " \n\n(" + game?.year + ")"
 
         downloadFile()
+
+        val button = findViewById<Button>(R.id.doPhoto)
+        val imageUri = initUri(game_id)
+        val resultLauncher : ActivityResultLauncher<Uri> =
+            registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+                Log.i("doPhoto", "success: $success")
+            }
+        button.setOnClickListener {
+            resultLauncher.launch(imageUri)
+        }
     }
 
     fun downloadFile() {
-        var urlString: String = "https://www.boardgamegeek.com/xmlapi2/thing?id=" + game?.ID + "&stats=1"
+        var urlString: String =
+            "https://www.boardgamegeek.com/xmlapi2/thing?id=" + game?.ID + "&stats=1"
         Log.i("downloadFile", urlString)
         val xmlDirectory = File(filesDir, "xml")
         if (!xmlDirectory.exists()) {
