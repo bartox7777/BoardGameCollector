@@ -39,7 +39,7 @@ class Sync : AppCompatActivity() {
         }
 
         // listener for sync expansions button
-        findViewById<Button>(R.id.sync_expansions).setOnClickListener() {
+        findViewById<Button>(R.id.sync_expansions).setOnClickListener {
             findViewById<TextView>(R.id.progress_text).visibility = TextView.VISIBLE
             findViewById<ProgressBar>(R.id.progress_bar).visibility = ProgressBar.VISIBLE
             sync(1)

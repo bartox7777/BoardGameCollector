@@ -33,7 +33,21 @@ class GameDetails : AppCompatActivity() {
     lateinit var imageView: ImageView
     var description: String? = null
     val imagesDir = "images"
-    var image : File? = null
+    var image: File? = null
+    lateinit var linearView: LinearLayout
+
+    private fun addImageToGallery(f: File) {
+        linearView.addView(ImageView(this).apply {
+            setImageBitmap(
+                android.graphics.Bitmap.createScaledBitmap(
+                    BitmapFactory.decodeFile(
+                        f.path
+                    ), 500, 500, false
+                )
+            )
+        })
+    }
+
 
     private fun initUri(gameID: Long): Uri {
         val imagesDir = File(applicationContext.filesDir, imagesDir)
@@ -42,9 +56,7 @@ class GameDetails : AppCompatActivity() {
         Log.i("initUri", image!!.absolutePath)
 
         return FileProvider.getUriForFile(
-            applicationContext,
-            "com.example.fileprovider",
-            image!!
+            applicationContext, "com.example.fileprovider", image!!
         )
     }
 
@@ -57,9 +69,16 @@ class GameDetails : AppCompatActivity() {
         dbHandler = MyDBHandler(this, null, null, 1)
         game = dbHandler.getGame(game_id)
         thumbnail_bmp = intent.getParcelableExtra("thumbnail_bmp")
+        linearView = findViewById(R.id.linearView)
+
+        val imDir = File(applicationContext.filesDir, imagesDir)
+        imDir.mkdir()
+        for (f in imDir.listFiles()) {
+            if (f.name.startsWith(game_id.toString())) addImageToGallery(f)
+        }
 
         findViewById<ImageView>(R.id.thumbnail).setImageBitmap(thumbnail_bmp)
-        findViewById<ImageView>(R.id.thumbnail).setOnClickListener() {
+        findViewById<ImageView>(R.id.thumbnail).setOnClickListener {
             val intent = Intent(this, FullScreen::class.java)
             intent.putExtra("thumbnail_bmp", thumbnail_bmp)
             startActivity(intent)
@@ -74,16 +93,8 @@ class GameDetails : AppCompatActivity() {
             registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
                 Log.i("doPhoto", "success: $success")
                 Log.i("doPhoto", "imageUri: ${image!!.absolutePath}")
-                if (success && image != null){
-                    findViewById<LinearLayout>(R.id.linearView).addView(ImageView(this).apply {
-                        setImageBitmap(
-                            android.graphics.Bitmap.createScaledBitmap(
-                                BitmapFactory.decodeFile(
-                                    image!!.path
-                                ), 500, 500, false
-                            )
-                        )
-                    })
+                if (success && image != null) {
+                    addImageToGallery(image!!)
                 }
             }
         button.setOnClickListener {
@@ -167,9 +178,7 @@ class GameDetails : AppCompatActivity() {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
-                        applicationContext,
-                        e.toString(),
-                        Toast.LENGTH_LONG
+                        applicationContext, e.toString(), Toast.LENGTH_LONG
                     ).show()
                 }
                 val incompleteFile = File(xmlDirectory, "game.xml")

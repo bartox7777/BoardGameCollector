@@ -58,12 +58,14 @@ class MainActivity : AppCompatActivity() {
             // change activity to Sync
             Log.i("MainActivity", "getLastSync: null")
             startActivity(Intent(this, Sync::class.java))
-        } else{
+        } else {
             findViewById<TextView>(R.id.username).text = dbHandler.getUsername()
-            findViewById<TextView>(R.id.numberOfGames).text = dbHandler.getNumberOfGames().toString()
+            findViewById<TextView>(R.id.numberOfGames).text =
+                dbHandler.getNumberOfGames().toString()
             findViewById<TextView>(R.id.numberOfExpansions).text =
                 dbHandler.getNumberOfExpansions().toString()
-            findViewById<TextView>(R.id.lastSync).text = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(dbHandler.getLastSync())
+            findViewById<TextView>(R.id.lastSync).text =
+                SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(dbHandler.getLastSync())
         }
     }
 }
@@ -240,13 +242,21 @@ class MyDBHandler(
         return count
     }
 
-    fun getGames(expansion : Boolean = false, orderByTitle : Boolean = true) : ArrayList<Game> {
+    fun getGames(expansion: Boolean = false, orderByTitle: Boolean = true): ArrayList<Game> {
         val db = this.readableDatabase
 //        var cursor : Cursor? = null
         val cursor = if (orderByTitle)
-            db.rawQuery("SELECT * FROM $COLLECTION_TABLE WHERE expansion=? ORDER BY $COLUMN_TITLE", arrayOf(if (expansion) "1" else "0"), null)
+            db.rawQuery(
+                "SELECT * FROM $COLLECTION_TABLE WHERE expansion=? ORDER BY $COLUMN_TITLE",
+                arrayOf(if (expansion) "1" else "0"),
+                null
+            )
         else
-            db.rawQuery("SELECT * FROM $COLLECTION_TABLE WHERE expansion=? ORDER BY $COLUMN_YEAR", arrayOf(if (expansion) "1" else "0"), null)
+            db.rawQuery(
+                "SELECT * FROM $COLLECTION_TABLE WHERE expansion=? ORDER BY $COLUMN_YEAR",
+                arrayOf(if (expansion) "1" else "0"),
+                null
+            )
         val games = ArrayList<Game>()
         if (!cursor.moveToFirst()) return games
         do {
@@ -261,9 +271,13 @@ class MyDBHandler(
         return games
     }
 
-    fun getGame(game_id : Long) : Game?{
+    fun getGame(game_id: Long): Game? {
         val db = this.readableDatabase
-        val cursor = db.rawQuery("SELECT * FROM $COLLECTION_TABLE WHERE $COLUMN_GAMEID = ?", arrayOf(game_id.toString()), null)
+        val cursor = db.rawQuery(
+            "SELECT * FROM $COLLECTION_TABLE WHERE $COLUMN_GAMEID = ?",
+            arrayOf(game_id.toString()),
+            null
+        )
         if (!cursor.moveToFirst()) return null
         val id = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_GAMEID))
         val title = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TITLE))

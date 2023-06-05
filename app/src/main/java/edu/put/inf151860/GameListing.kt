@@ -108,7 +108,7 @@ class GameRow(context: Context, game: Game, idx: Int, on: Int?) : TableRow(conte
 //                    Log.e("GameRow", "Error while loading image: $e")
 //                }
 //            }
-            CoroutineScope(Dispatchers.IO).launch(){
+            CoroutineScope(Dispatchers.IO).launch {
                 requestSemaphore.acquire()
                 val url = game.thumbnailURL
                 try {
@@ -144,7 +144,7 @@ class GameRow(context: Context, game: Game, idx: Int, on: Int?) : TableRow(conte
                 setBackgroundColor(if (idx % 2 == 0) 0xFFEEEEEE.toInt() else 0xFFCCCCCC.toInt())
             }
             setPadding(20, 40, 20, 40)
-            setOnClickListener() {
+            setOnClickListener {
                 val intent = Intent(context, GameDetails::class.java)
                 intent.putExtra("game_id", game.ID)
                 intent.putExtra("thumbnail_bmp", thumbnail_bmp)
@@ -189,7 +189,7 @@ class GameListing : AppCompatActivity() {
 
         findViewById<ScrollView>(R.id.scroll_view).addView(tableLayout)
 
-        findViewById<Button>(R.id.sort_by_title).setOnClickListener() {
+        findViewById<Button>(R.id.sort_by_title).setOnClickListener {
             val intent = Intent(this, GameListing::class.java)
             intent.putExtra("expansion", expantion)
             intent.putExtra("sort_by_title", true)
@@ -197,7 +197,7 @@ class GameListing : AppCompatActivity() {
             startActivity(intent)
         }
 
-        findViewById<Button>(R.id.sort_by_year).setOnClickListener() {
+        findViewById<Button>(R.id.sort_by_year).setOnClickListener {
             val intent = Intent(this, GameListing::class.java)
             intent.putExtra("expansion", expantion)
             intent.putExtra("sort_by_title", false)
@@ -205,7 +205,7 @@ class GameListing : AppCompatActivity() {
             startActivity(intent)
         }
 
-        findViewById<Button>(R.id.main_screen).setOnClickListener() {
+        findViewById<Button>(R.id.main_screen).setOnClickListener {
             finish()
         }
     }
