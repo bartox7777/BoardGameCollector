@@ -1,11 +1,13 @@
 package edu.put.inf151860
 
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -30,18 +32,19 @@ class GameDetails : AppCompatActivity() {
     lateinit var dbHandler: MyDBHandler
     lateinit var imageView: ImageView
     var description: String? = null
-
     val imagesDir = "images"
+    var image : File? = null
 
     private fun initUri(gameID: Long): Uri {
         val imagesDir = File(applicationContext.filesDir, imagesDir)
         imagesDir.mkdir()
-        val image = File(imagesDir, "${gameID}_${gameID + Random.nextInt()}.jpg")
+        image = File(imagesDir, "${gameID}_${gameID + Random.nextInt()}.jpg")
+        Log.i("initUri", image!!.absolutePath)
 
         return FileProvider.getUriForFile(
             applicationContext,
             "com.example.fileprovider",
-            image
+            image!!
         )
     }
 
@@ -67,14 +70,28 @@ class GameDetails : AppCompatActivity() {
         downloadFile()
 
         val button = findViewById<Button>(R.id.doPhoto)
-        val imageUri = initUri(game_id)
-        val resultLauncher : ActivityResultLauncher<Uri> =
+        val resultLauncher: ActivityResultLauncher<Uri> =
             registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
                 Log.i("doPhoto", "success: $success")
+                Log.i("doPhoto", "imageUri: ${image!!.absolutePath}")
+                if (success && image != null){
+                    findViewById<LinearLayout>(R.id.linearView).addView(ImageView(this).apply {
+                        setImageBitmap(
+                            android.graphics.Bitmap.createScaledBitmap(
+                                BitmapFactory.decodeFile(
+                                    image!!.path
+                                ), 500, 500, false
+                            )
+                        )
+                    })
+                }
             }
         button.setOnClickListener {
+            val imageUri = initUri(game_id)
             resultLauncher.launch(imageUri)
+
         }
+
     }
 
     fun downloadFile() {
